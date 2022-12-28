@@ -18,6 +18,8 @@ func main() {
     sig := make(chan os.Signal, 1)
     signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
+    println("Spawning", rCPU, "worker")
+
     uS := server.UDPServer{
         Address: "0.0.0.0:3000",
         Workers: rCPU,
