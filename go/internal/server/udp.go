@@ -17,7 +17,7 @@ type UDPServer struct {
 
 func (u UDPServer) Start() error {
     if u.Handler == nil {
-        return errors.New("plese provide message handler, handle cannot be nil")
+        return errors.New("plese provide message handler, handler cannot be nil")
     }
 
     n, err := net.ListenPacket("udp", u.Address)
