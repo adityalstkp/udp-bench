@@ -39,7 +39,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         buff: vec![0; 1024],
         print_out: None,
     };
-
+    
+    // TODO: how to handle multiple threads in here???
     udp_server.start().await?;
     Ok(())
 }
