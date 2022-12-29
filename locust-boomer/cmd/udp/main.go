@@ -1,9 +1,23 @@
 package main
 
-import "github.com/myzhan/boomer"
+import (
+	"time"
+
+	"github.com/myzhan/boomer"
+)
 
 func udpClientTestCase() {
-    boomer.RecordFailure("udp", "example", 10, "example error")
+    start := time.Now()
+    time.Sleep(100 * time.Millisecond)
+    elapsed := time.Since(start)
+
+    for i := 0; i <= 10; i++ {
+        if i % 2 == 0 {
+            boomer.RecordSuccess("udp", "bench", elapsed.Nanoseconds()/int64(time.Millisecond), 10)
+        } else {
+            boomer.RecordFailure("udp", "bench", 10, "example error")
+        }
+    }
 }
 
 func main() {
