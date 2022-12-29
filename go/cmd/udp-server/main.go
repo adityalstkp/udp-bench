@@ -1,15 +1,15 @@
 package main
 
 import (
-	"context"
-	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
+    "context"
+    "os"
+    "os/signal"
+    "runtime"
+    "syscall"
 
-	"github.com/adityalstkp/udp-bench/internal/handler"
-	"github.com/adityalstkp/udp-bench/internal/message"
-	"github.com/adityalstkp/udp-bench/internal/server"
+    "github.com/adityalstkp/udp-bench/internal/handler"
+    "github.com/adityalstkp/udp-bench/internal/message"
+    "github.com/adityalstkp/udp-bench/internal/server"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
         <- sig
 
         serverStopCtx()
-	}()
+    }()
 
     println("Listening on", addr, "with", rCPU, "workers")
 
