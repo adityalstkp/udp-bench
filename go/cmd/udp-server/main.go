@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/adityalstkp/udp-bench/internal/handler"
+	"github.com/adityalstkp/udp-bench/internal/message"
 	"github.com/adityalstkp/udp-bench/internal/server"
 )
 
@@ -18,14 +19,13 @@ func main() {
     sig := make(chan os.Signal, 1)
     signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-    println("Spawning", rCPU, "worker")
-
+    addr := "0.0.0.0:3000"
+    mPool := message.NewMessagePool(1024, 1000000)
     uS := server.UDPServer{
-        Address: "0.0.0.0:3000",
+        Address: addr,
         Workers: rCPU,
-        MaxQueue: 1000000,
-        Datagram: 1024,
         Handler: handler.MessageHandler,
+        MessagePool: mPool,
     }
     err := uS.Start(); if err != nil {
         panic(err)
@@ -38,7 +38,7 @@ func main() {
         serverStopCtx()
 	}()
 
-    println("Listening...")
+    println("Listening on", addr, "with", rCPU, "workers")
 
     <- serverCtx.Done()
 }

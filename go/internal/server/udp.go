@@ -10,9 +10,8 @@ import (
 type UDPServer struct {
     Address string
     Workers int
-    Datagram int
-    MaxQueue int
     Handler func(m []byte)
+    MessagePool message.IMessagePool
 }
 
 func (u UDPServer) Start() error {
@@ -25,26 +24,24 @@ func (u UDPServer) Start() error {
         return err
     }
 
-    m := message.NewMessage(u.Datagram, u.MaxQueue)
-
     for i := 0; i < u.Workers; i++ {
-        go m.Dequeue(u.Handler)
-        go receiveMessage(n, m)
+        go u.MessagePool.Dequeue(u.Handler)
+        go u.receiveMessage(n)
     }
     
     return nil
 }
 
-func receiveMessage(c net.PacketConn, m message.Message) {
+func (u UDPServer) receiveMessage(c net.PacketConn) {
     defer c.Close()
     
     for {
-        msg := m.Pool.Get().([]byte)
+        msg := u.MessagePool.Get()
         _, _, err := c.ReadFrom(msg)
         if err != nil {
             println(err.Error())
         }
         
-        m.Enqueue(msg)
+        u.MessagePool.Enqueue(msg)
     }
 }

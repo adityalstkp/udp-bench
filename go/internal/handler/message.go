@@ -1,5 +1,8 @@
 package handler
 
+import "strings"
+
 func MessageHandler(m []byte) {
-    println(string(m))
+    s := string(m)
+    println(strings.TrimSuffix(s, "\n"))
 }
