@@ -19,14 +19,14 @@ func (u UDPServer) Start() error {
         return errors.New("plese provide message handler, handler cannot be nil")
     }
 
-    n, err := net.ListenPacket("udp", u.Address)
+    c, err := net.ListenPacket("udp", u.Address)
     if err != nil {
         return err
     }
 
     for i := 0; i < u.Workers; i++ {
         go u.MessagePool.Dequeue(u.Handler)
-        go u.receiveMessage(n)
+        go u.receiveMessage(c)
     }
     
     return nil

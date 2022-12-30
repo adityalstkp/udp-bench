@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"net"
 	"time"
 
@@ -22,6 +23,8 @@ func init() {
 }
 
 func sendPacket() {
+    time.Sleep(100 * time.Millisecond)
+
     start := time.Now()
     
     conn, err := net.Dial("udp", targetAddr)
@@ -32,7 +35,7 @@ func sendPacket() {
     }
     defer conn.Close()
 
-    _, err = conn.Write([]byte(randBytes(10)))
+    _, err = conn.Write([]byte(randBytesString(10)))
     if err != nil {
         elapsed := time.Since(start)         
         boomer.RecordFailure("udp", "write", elapsed.Milliseconds(), err.Error())
@@ -44,12 +47,12 @@ func sendPacket() {
     return 
 }
 
-func randBytes(n int) []byte {
+func randBytesString(n int) string {
     b := make([]byte, n)
-    for i, v := range b {
-        b[i] = alphanum[v%byte(len(alphanum))]
+    for i := range b {
+        b[i] = alphanum[rand.Intn(len(alphanum))]
     }
-    return b
+    return string(b)
 }
 
 func main() {
