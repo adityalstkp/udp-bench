@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-    rCPU := runtime.NumCPU() - 1
+    rCPU := runtime.NumCPU()
     runtime.GOMAXPROCS(rCPU)
 
     sig := make(chan os.Signal, 1)

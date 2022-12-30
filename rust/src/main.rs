@@ -18,7 +18,8 @@ impl UdpServer {
 
         loop {
             if let Some((size, peer)) = print_out {
-                let _amt = socket.send_to(&buff[..size], &peer).await?;
+                let amt = socket.send_to(&buff[..size], &peer).await?;
+                println!("Packet amount {}", amt)
             }
 
             print_out = Some(socket.recv_from(&mut buff).await?);
@@ -29,7 +30,7 @@ impl UdpServer {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let addr = "127.0.0.1:3001";
+    let addr = "0.0.0.0:3001";
     let socket = UdpSocket::bind(&addr).await?;
 
     println!("Listening on {}", socket.local_addr()?);

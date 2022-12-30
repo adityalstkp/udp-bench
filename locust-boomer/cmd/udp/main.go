@@ -1,30 +1,62 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"net"
 	"time"
 
 	"github.com/myzhan/boomer"
 )
 
-func udpClientTestCase() {
-    start := time.Now()
-    time.Sleep(100 * time.Millisecond)
-    elapsed := time.Since(start)
+const alphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-    for i := 0; i <= 10; i++ {
-        if i % 2 == 0 {
-            boomer.RecordSuccess("udp", "bench", elapsed.Nanoseconds()/int64(time.Millisecond), 10)
-        } else {
-            boomer.RecordFailure("udp", "bench", 10, "example error")
-        }
+var portFlag string
+var targetAddr string
+func init() {
+    flag.StringVar(&portFlag, "target-port", "3000", "Port bind for BE UDP")
+    flag.Parse()
+
+    targetAddr = fmt.Sprintf("0.0.0.0:%s", portFlag)
+    println("Target is", targetAddr)
+}
+
+func sendPacket() {
+    start := time.Now()
+    
+    conn, err := net.Dial("udp", targetAddr)
+    if err != nil {
+        elapsed := time.Since(start)
+        boomer.RecordFailure("udp", "write", elapsed.Milliseconds(), err.Error())
+        return 
     }
+    defer conn.Close()
+
+    _, err = conn.Write([]byte(randBytes(10)))
+    if err != nil {
+        elapsed := time.Since(start)         
+        boomer.RecordFailure("udp", "write", elapsed.Milliseconds(), err.Error())
+        return
+    }
+
+    elapsed := time.Since(start)
+    boomer.RecordSuccess("udp", "write", elapsed.Milliseconds(), 0)
+    return 
+}
+
+func randBytes(n int) []byte {
+    b := make([]byte, n)
+    for i, v := range b {
+        b[i] = alphanum[v%byte(len(alphanum))]
+    }
+    return b
 }
 
 func main() {
     udpClientTask := &boomer.Task{
-        Name: "udp_client",
+        Name: "send_packet",
         Weight: 10,
-        Fn: udpClientTestCase,
+        Fn: sendPacket,
     }
 
 
