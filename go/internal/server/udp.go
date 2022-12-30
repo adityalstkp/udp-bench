@@ -37,7 +37,7 @@ func (u UDPServer) receiveMessage(c net.PacketConn) {
     
     for {
         msg := u.MessagePool.Get()
-        _, _, err := c.ReadFrom(msg)
+        _, _, err := c.ReadFrom(msg[0:])
         if err != nil {
             println(err.Error())
         }
