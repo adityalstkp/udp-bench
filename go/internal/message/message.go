@@ -29,7 +29,7 @@ func (m messagePool) Enqueue(msg []byte) {
 func (m messagePool) Dequeue(h func(msg []byte)) {
     for msg := range m.queue {
         h(msg)
-        m.pool.Put(msg)
+        m.pool.Put(msg[0:])
     }
 }
 
