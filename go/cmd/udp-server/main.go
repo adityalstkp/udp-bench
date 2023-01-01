@@ -1,18 +1,30 @@
 package main
 
 import (
-    "context"
-    "os"
-    "os/signal"
-    "runtime"
-    "syscall"
-
-    "github.com/adityalstkp/udp-bench/internal/handler"
-    "github.com/adityalstkp/udp-bench/internal/message"
-    "github.com/adityalstkp/udp-bench/internal/server"
+	"context"
+	"flag"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
+    _ "net/http/pprof"
+    
+	"github.com/adityalstkp/udp-bench/internal/handler"
+	"github.com/adityalstkp/udp-bench/internal/message"
+	"github.com/adityalstkp/udp-bench/internal/server"
 )
 
+var enablePprof bool
+
+func init() {
+    flag.BoolVar(&enablePprof, "enable-pprof", false, "Enable pprof on 6060")
+}
+
 func main() {
+    flag.Parse()
+
     rCPU := runtime.NumCPU()
     runtime.GOMAXPROCS(rCPU)
 
@@ -39,6 +51,10 @@ func main() {
     }()
 
     println("Listening on", addr, "with", rCPU, "workers")
+
+    go func() {
+        log.Println(http.ListenAndServe("localhost:6060", nil))
+    }()
 
     <- serverCtx.Done()
 }
