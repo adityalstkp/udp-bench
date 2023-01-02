@@ -6,9 +6,9 @@ COPY cmd/ cmd/
 COPY internal/ internal/
 COPY go.mod go.mod
 
-RUN CGO_ENABLED=0 go build -o udp-server cmd/udp-server/main.go
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o udp-server cmd/udp-server/main.go
 
-FROM alpine
+FROM alpine:latest
 
 RUN apk update && apk --no-cache add bash ca-certificates
 

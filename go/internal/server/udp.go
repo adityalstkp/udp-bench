@@ -1,47 +1,97 @@
 package server
+    
 
 import (
 	"errors"
 	"net"
+	"sync"
 
-	"github.com/adityalstkp/udp-bench/internal/message"
+)
+
+const (
+    maxPacketSize = 4096
 )
 
 type UDPServer struct {
-    Address string
-    Workers int
-    Handler func(m []byte)
-    MessagePool message.IMessagePool
+    workers int
+    handler func(m []byte)
+    pool sync.Pool
+    conn net.PacketConn
+    datagramChannel chan []byte
+    wait sync.WaitGroup
 }
 
-func (u UDPServer) Start() error {
-    if u.Handler == nil {
-        return errors.New("plese provide message handler, handler cannot be nil")
-    }
+func NewUDPServer(w int) *UDPServer {
+    return &UDPServer{
+        pool: sync.Pool{
+            New: func() any {
+                return make([]byte, maxPacketSize)
+            },
+        },
+        workers: w,
+    } 
+}
 
-    c, err := net.ListenPacket("udp", u.Address)
+func (u *UDPServer) SetHandler(h func(m []byte)) {
+    u.handler = h
+}
+
+func (u *UDPServer) Listen(addr string) error {
+    c, err := net.ListenPacket("udp", addr)
     if err != nil {
         return err
     }
 
-    for i := 0; i < u.Workers; i++ {
-        go u.MessagePool.Dequeue(u.Handler)
-        go u.receiveMessage(c)
-    }
-    
+    u.conn = c
+
     return nil
 }
 
-func (u UDPServer) receiveMessage(c net.PacketConn) {
+func (u *UDPServer) Start() error {
+    if u.handler == nil {
+        return errors.New("please set a valid handler")
+    }
+
+    workers := u.workers
+    u.datagramChannel = make(chan []byte, workers)
+
+    u.wait.Add(workers)
+    for i := 0; i < workers; i++ {
+        go u.parseMessage()
+    }
+
+    u.wait.Add(1)
+    go u.receiveMessage(u.conn)
+
+    u.wait.Wait()
+
+    return nil
+}
+
+
+func (u *UDPServer) receiveMessage(c net.PacketConn) {
     defer c.Close()
     
+    defer u.wait.Done()
+    
     for {
-        msg := u.MessagePool.Get()
-        _, _, err := c.ReadFrom(msg[0:])
+        msg := u.pool.Get().([]byte)
+        n, _, err := c.ReadFrom(msg)
         if err != nil {
             println(err.Error())
+            continue
         }
-        
-        u.MessagePool.Enqueue(msg)
+
+        u.datagramChannel <- msg[:n]
     }
 }
+
+func (u *UDPServer) parseMessage() {
+    defer u.wait.Done()
+
+    for m := range u.datagramChannel {
+        u.handler(m)
+        u.pool.Put(m[:maxPacketSize])
+    }
+}
+
