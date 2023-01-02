@@ -1,5 +1,4 @@
 const udp = require('dgram')
-const os = require('os')
 
 /**
     @return {import('dgram').Socket}
@@ -13,6 +12,7 @@ function createUdpServer(datagram) {
     return udpServer 
 }
 
+// implement worker_threads??
 function main() {
     const udpS = createUdpServer(1024)
 
@@ -20,6 +20,7 @@ function main() {
         const addr = udpS.address()
         console.log(`Listening on ${addr.port}`) 
     })
+
     udpS.on('message', function(msg) {
         console.log(msg.toString())
     })

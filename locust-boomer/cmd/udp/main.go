@@ -14,6 +14,7 @@ const alphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 
 var portFlag string
 var targetAddr string
+
 func init() {
     flag.StringVar(&portFlag, "target-port", "3000", "Port bind for BE UDP")
     flag.Parse()
