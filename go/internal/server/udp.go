@@ -9,13 +9,15 @@ import (
 )
 
 const (
+    maxQueueSize = 1000000
+    UDPPacketSize = 1024
     maxPacketSize = 4096
+    packetBufSize = 6 * 1024
 )
 
 type UDPServer struct {
     workers int
     handler func(m []byte)
-    pool sync.Pool
     conn net.PacketConn
     datagramChannel chan []byte
     wait sync.WaitGroup
@@ -23,11 +25,6 @@ type UDPServer struct {
 
 func NewUDPServer(w int) *UDPServer {
     return &UDPServer{
-        pool: sync.Pool{
-            New: func() any {
-                return make([]byte, maxPacketSize)
-            },
-        },
         workers: w,
     } 
 }
@@ -73,16 +70,25 @@ func (u *UDPServer) receiveMessage(c net.PacketConn) {
     defer c.Close()
     
     defer u.wait.Done()
+
+    var buf []byte
     
     for {
-        msg := u.pool.Get().([]byte)
-        n, _, err := c.ReadFrom(msg)
+        if len(buf) < UDPPacketSize {
+            buf = make([]byte, packetBufSize, packetBufSize)
+        }
+
+        // msg := u.pool.Get().([]byte)
+        n, _, err := c.ReadFrom(buf)
         if err != nil {
             println(err.Error())
             continue
         }
 
-        u.datagramChannel <- msg[:n]
+        msg := buf[:n]
+        buf = buf[n:]
+        println(len(buf), cap(buf))
+        u.datagramChannel <- msg
     }
 }
 
@@ -91,7 +97,7 @@ func (u *UDPServer) parseMessage() {
 
     for m := range u.datagramChannel {
         u.handler(m)
-        u.pool.Put(m[:maxPacketSize])
+        // u.pool.Put(m[:maxPacketSize])
     }
 }
 
